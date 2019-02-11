@@ -39,21 +39,24 @@ var typeMapping map[string]string
 func init() {
 	templateInterface = template.Must(template.New("interface").Delims("<<", ">>").Parse(interfaceTemplate))
 
+	typeString := "string"
+	typeNumber := "number"
+
 	// Go type ==> Typescript type
 	typeMapping = map[string]string{
-		"string":  "string",
-		"int":     "number",
-		"int8":    "number",
-		"int16":   "number",
-		"int32":   "number",
-		"int64":   "number",
-		"uint":    "number",
-		"uint8":   "number",
-		"uint16":  "number",
-		"uint32":  "number",
-		"uint64":  "number",
-		"float32": "number",
-		"float64": "number",
+		"string":  typeString,
+		"int":     typeNumber,
+		"int8":    typeNumber,
+		"int16":   typeNumber,
+		"int32":   typeNumber,
+		"int64":   typeNumber,
+		"uint":    typeNumber,
+		"uint8":   typeNumber,
+		"uint16":  typeNumber,
+		"uint32":  typeNumber,
+		"uint64":  typeNumber,
+		"float32": typeNumber,
+		"float64": typeNumber,
 	}
 }
 
@@ -132,8 +135,8 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 			recursiveDefinitions = append(recursiveDefinitions, fieldType)
 			defer func() {
 			}()
-		} else if fieldTypescriptType, ok = typeMapping[fieldType.Name()]; !ok {
-			return errors.New("cannot map typescript type from " + fieldType.Name())
+		} else if fieldTypescriptType, ok = typeMapping[fieldType.Kind().String()]; !ok {
+			return errors.New("cannot map typescript type from " + fieldType.Kind().String())
 		}
 
 		if canBeNull {

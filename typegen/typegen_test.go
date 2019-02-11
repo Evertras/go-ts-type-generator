@@ -52,6 +52,11 @@ type MockStructNestedBadFieldInner struct {
 	BadField complex128
 }
 
+type AliasedInt int
+type MockStructAliased struct {
+	X AliasedInt
+}
+
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	tests := []struct {
 		Input       interface{}
@@ -117,6 +122,12 @@ interface IMockStructNestedInner {
 		{
 			Input:       MockStructNestedBadFieldOuter{},
 			ExpectError: true,
+		},
+		{
+			Input: MockStructAliased{},
+			Output: `interface IMockStructAliased {
+	X: number;
+}`,
 		},
 	}
 
