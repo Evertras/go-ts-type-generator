@@ -24,6 +24,8 @@ type MockStructInts struct {
 	H uint16
 	I uint32
 	J uint64
+	K float32
+	L float64
 }
 
 type MockStructNestedInner struct {
@@ -83,6 +85,8 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	H: number;
 	I: number;
 	J: number;
+	K: number;
+	L: number;
 }`,
 		},
 		{
@@ -133,6 +137,7 @@ interface IMockStructNestedInner {
 
 		if err != nil {
 			t.Error("failed to generate:", err)
+			continue
 		}
 
 		str := builder.String()
