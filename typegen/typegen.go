@@ -1,6 +1,7 @@
 package typegen
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"text/template"
@@ -69,17 +70,19 @@ func (g *Generator) GenerateSingle(t interface{}) (string, error) {
 			fieldName = field.Name
 		}
 
-		var typeName string
+		var fieldTypescriptType string
 		var ok bool
 
-		if typeName, ok = typeMapping[field.Type.Name()]; !ok {
-			// For now, if we don't know it, just set it to any
-			typeName = "any"
+		if field.Type.Kind() == reflect.Struct {
+			// Going to assume that the inner type is also exported
+			fieldTypescriptType = "I" + field.Type.Name()
+		} else if fieldTypescriptType, ok = typeMapping[field.Type.Name()]; !ok {
+			return "", errors.New("cannot map typescript type from " + field.Type.Name())
 		}
 
 		data.Fields = append(data.Fields, fieldTemplateData{
 			Name:           fieldName,
-			TypescriptType: typeName,
+			TypescriptType: fieldTypescriptType,
 		})
 	}
 

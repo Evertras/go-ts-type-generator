@@ -23,6 +23,14 @@ type MockStructInts struct {
 	J uint64
 }
 
+type MockStructNestedInner struct {
+	NestedField int `json:"x"`
+}
+
+type MockStructNestedOuter struct {
+	Inner MockStructNestedInner `json:"inner"`
+}
+
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	tests := []struct {
 		Input  interface{}
@@ -52,6 +60,12 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	H: number;
 	I: number;
 	J: number;
+}`,
+		},
+		{
+			Input: MockStructNestedOuter{},
+			Output: `interface IMockStructNestedOuter {
+	inner: IMockStructNestedInner;
 }`,
 		},
 	}
