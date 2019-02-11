@@ -1,0 +1,1 @@
+# golang-ts-type-generator
