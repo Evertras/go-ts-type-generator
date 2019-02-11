@@ -5,4 +5,4 @@
 A library explicitly for using `go generate` to automatically generate Typescript
 definitions based off of Go structs.
 
-See (the Example directory)[example] for a working example.
+See (the Example directory)[./example/] for a working example.
