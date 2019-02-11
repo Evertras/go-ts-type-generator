@@ -8,23 +8,30 @@ import (
 	"text/template"
 )
 
+// Config contains optional settings to dictate behavior/output
+type Config struct {
+	Indentation string
+}
+
 // Generator can inspect a struct type and generate Typescript definitions.
 type Generator struct {
 	typesDefined map[string]bool
+	indentation  string
 }
 
 // Using custom delimiters here to avoid {} collisions
 const interfaceTemplate = `interface I<<.Name>> {<<range .Fields>><<if .Desc>>
-	/**
-	 * <<.Desc>>
-	 */<<end>>
-	<<.Name>>: <<.TypescriptType>>;<<end>>
+<<.Indent>>/**
+<<.Indent>> * <<.Desc>>
+<<.Indent>> */<<end>>
+<<.Indent>><<.Name>>: <<.TypescriptType>>;<<end>>
 }`
 
 type fieldTemplateData struct {
 	Name           string
 	TypescriptType string
 	Desc           string
+	Indent         string
 }
 
 type typeTemplateData struct {
@@ -60,10 +67,21 @@ func init() {
 	}
 }
 
-// New creates a new Generator to use
+// New creates a new Generator to use with default behavior
 func New() *Generator {
+	return NewWithConfig(Config{})
+}
+
+// NewWithConfig creates a new Generator to use with configured behavior
+func NewWithConfig(cfg Config) *Generator {
+	// Handle defaults
+	if cfg.Indentation == "" {
+		cfg.Indentation = "\t"
+	}
+
 	return &Generator{
 		typesDefined: make(map[string]bool),
+		indentation:  cfg.Indentation,
 	}
 }
 
@@ -151,6 +169,7 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 			Name:           fieldName,
 			TypescriptType: fieldTypescriptType,
 			Desc:           field.Tag.Get("tsdesc"),
+			Indent:         g.indentation,
 		})
 	}
 

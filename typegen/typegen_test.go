@@ -62,6 +62,7 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 		Input       interface{}
 		Output      string
 		ExpectError bool
+		Config      Config
 	}{
 		{
 			Input:  MockStructEmpty{},
@@ -129,10 +130,23 @@ interface IMockStructNestedInner {
 	X: number;
 }`,
 		},
+		{
+			Input: MockStructStrings{},
+			Config: Config{
+				Indentation: "  ",
+			},
+			Output: `interface IMockStructStrings {
+  /**
+   * It's a field of some kind.
+   */
+  textstuff: string;
+  Another: string;
+}`,
+		},
 	}
 
 	for _, test := range tests {
-		g := New()
+		g := NewWithConfig(test.Config)
 		builder := strings.Builder{}
 
 		err := g.GenerateSingle(&builder, test.Input)
