@@ -71,6 +71,8 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 
 	typesDefined[t.Name()] = true
 
+	recursiveDefinitions := make([]reflect.Type, 0)
+
 	data := typeTemplateData{
 		Name: t.Name(),
 	}
@@ -116,11 +118,8 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 			fieldTypescriptType = "I" + fieldType.Name()
 
 			// After we're done, make sure to include this type recursively
+			recursiveDefinitions = append(recursiveDefinitions, fieldType)
 			defer func() {
-				if !typesDefined[fieldType.Name()] {
-					out.Write([]byte("\n\n"))
-					g.generateSingle(out, fieldType)
-				}
 			}()
 		} else if fieldTypescriptType, ok = typeMapping[fieldType.Name()]; !ok {
 			return errors.New("cannot map typescript type from " + fieldType.Name())
@@ -141,5 +140,29 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 		})
 	}
 
-	return templateInterface.Execute(out, data)
+	err := templateInterface.Execute(out, data)
+
+	if err != nil {
+		return err
+	}
+
+	for _, recursive := range recursiveDefinitions {
+		if !typesDefined[recursive.Name()] {
+			out.Write([]byte("\n\n"))
+			if err := g.generateSingle(out, recursive); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// GenerateTypes writes all typescript interface definitions to the supplied writer
+func (g *Generator) GenerateTypes(out io.Writer, types ...interface{}) error {
+	for _, t := range types {
+		g.GenerateSingle(out, t)
+	}
+
+	return nil
 }

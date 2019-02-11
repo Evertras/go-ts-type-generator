@@ -42,10 +42,19 @@ type MockStructNestedCircular struct {
 	Itself *MockStructNestedCircular `json:"circular,omitempty"`
 }
 
+type MockStructNestedBadFieldOuter struct {
+	Inner MockStructNestedBadFieldInner
+}
+
+type MockStructNestedBadFieldInner struct {
+	BadField complex128
+}
+
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	tests := []struct {
-		Input  interface{}
-		Output string
+		Input       interface{}
+		Output      string
+		ExpectError bool
 	}{
 		{
 			Input:  MockStructEmpty{},
@@ -101,6 +110,10 @@ interface IMockStructNestedInner {
 	circular: IMockStructNestedCircular | null | undefined;
 }`,
 		},
+		{
+			Input:       MockStructNestedBadFieldOuter{},
+			ExpectError: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -108,6 +121,15 @@ interface IMockStructNestedInner {
 		builder := strings.Builder{}
 
 		err := g.GenerateSingle(&builder, test.Input)
+
+		if test.ExpectError {
+			if err == nil {
+				t.Errorf("Expected error but instead got output:\n%s", builder.String())
+			}
+
+			// Either way, we're done
+			continue
+		}
 
 		if err != nil {
 			t.Error("failed to generate:", err)
