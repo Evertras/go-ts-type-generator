@@ -2,6 +2,7 @@ package typegen
 
 import (
 	"errors"
+	"io"
 	"reflect"
 	"strings"
 	"text/template"
@@ -11,13 +12,18 @@ import (
 type Generator struct {
 }
 
-const interfaceTemplate = `interface I<<.Name>> {<<range .Fields>>
+// Using custom delimiters here to avoid {} collisions
+const interfaceTemplate = `interface I<<.Name>> {<<range .Fields>><<if .Desc>>
+	/**
+	 * <<.Desc>>
+	 */<<end>>
 	<<.Name>>: <<.TypescriptType>>;<<end>>
 }`
 
 type fieldTemplateData struct {
 	Name           string
 	TypescriptType string
+	Desc           string
 }
 
 type typeTemplateData struct {
@@ -27,11 +33,13 @@ type typeTemplateData struct {
 }
 
 var templateInterface *template.Template
-
 var typeMapping map[string]string
+var typesDefined = make(map[string]bool)
 
 func init() {
 	templateInterface = template.Must(template.New("interface").Delims("<<", ">>").Parse(interfaceTemplate))
+
+	// Go type ==> Typescript type
 	typeMapping = map[string]string{
 		"string": "string",
 		"int":    "number",
@@ -49,17 +57,29 @@ func init() {
 
 // GenerateSingle takes in a single type and returns a full Typescript definition
 // based on that type.
-func (g *Generator) GenerateSingle(t interface{}) (string, error) {
-
+func (g *Generator) GenerateSingle(out io.Writer, t interface{}) error {
 	r := reflect.TypeOf(t)
 
-	data := typeTemplateData{
-		Name: r.Name(),
+	return g.generateSingle(out, r)
+}
+
+func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
+	// Already defined earlier, don't redefine
+	if typesDefined[t.Name()] {
+		return nil
 	}
 
-	for i := 0; i < r.NumField(); i++ {
-		field := r.Field(i)
+	typesDefined[t.Name()] = true
+
+	data := typeTemplateData{
+		Name: t.Name(),
+	}
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
 		fieldName := field.Tag.Get("json")
+		canBeUndefined := false
+		canBeNull := false
 
 		// Skip if it's explicitly set to -
 		if fieldName == "-" {
@@ -68,29 +88,58 @@ func (g *Generator) GenerateSingle(t interface{}) (string, error) {
 
 		if fieldName == "" {
 			fieldName = field.Name
+		} else {
+			split := strings.Split(fieldName, ",")
+
+			for _, s := range split {
+				if s == "omitempty" {
+					canBeUndefined = true
+				}
+			}
+
+			fieldName = split[0]
 		}
 
 		var fieldTypescriptType string
 		var ok bool
+		var fieldType = field.Type
 
-		if field.Type.Kind() == reflect.Struct {
-			// Going to assume that the inner type is also exported
-			fieldTypescriptType = "I" + field.Type.Name()
-		} else if fieldTypescriptType, ok = typeMapping[field.Type.Name()]; !ok {
-			return "", errors.New("cannot map typescript type from " + field.Type.Name())
+		kind := fieldType.Kind()
+
+		if kind == reflect.Ptr {
+			canBeNull = true
+			fieldType = fieldType.Elem()
+			kind = fieldType.Kind()
+		}
+
+		if kind == reflect.Struct {
+			fieldTypescriptType = "I" + fieldType.Name()
+
+			// After we're done, make sure to include this type recursively
+			defer func() {
+				if !typesDefined[fieldType.Name()] {
+					out.Write([]byte("\n\n"))
+					g.generateSingle(out, fieldType)
+				}
+			}()
+		} else if fieldTypescriptType, ok = typeMapping[fieldType.Name()]; !ok {
+			return errors.New("cannot map typescript type from " + fieldType.Name())
+		}
+
+		if canBeNull {
+			fieldTypescriptType = fieldTypescriptType + " | null"
+		}
+
+		if canBeUndefined {
+			fieldTypescriptType = fieldTypescriptType + " | undefined"
 		}
 
 		data.Fields = append(data.Fields, fieldTemplateData{
 			Name:           fieldName,
 			TypescriptType: fieldTypescriptType,
+			Desc:           field.Tag.Get("tsdesc"),
 		})
 	}
 
-	var builder strings.Builder
-
-	if err := templateInterface.Execute(&builder, data); err != nil {
-		return "", err
-	}
-
-	return builder.String(), nil
+	return templateInterface.Execute(out, data)
 }

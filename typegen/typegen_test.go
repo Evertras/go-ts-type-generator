@@ -1,11 +1,14 @@
 package typegen
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 type MockStructEmpty struct{}
 
 type MockStructStrings struct {
-	SomeField    string `json:"textstuff"`
+	SomeField    string `json:"textstuff" tsdesc:"It's a field of some kind."`
 	Another      string
 	DontLookAtMe string `json:"-"`
 }
@@ -24,11 +27,19 @@ type MockStructInts struct {
 }
 
 type MockStructNestedInner struct {
-	NestedField int `json:"x"`
+	NestedField int `json:"x" tsdesc:"A really important value."`
 }
 
 type MockStructNestedOuter struct {
 	Inner MockStructNestedInner `json:"inner"`
+}
+
+type MockStructPointer struct {
+	Val *int `json:"x"`
+}
+
+type MockStructNestedCircular struct {
+	Itself *MockStructNestedCircular `json:"circular,omitempty"`
 }
 
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
@@ -43,6 +54,9 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 		{
 			Input: MockStructStrings{},
 			Output: `interface IMockStructStrings {
+	/**
+	 * It's a field of some kind.
+	 */
 	textstuff: string;
 	Another: string;
 }`,
@@ -66,21 +80,43 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 			Input: MockStructNestedOuter{},
 			Output: `interface IMockStructNestedOuter {
 	inner: IMockStructNestedInner;
+}
+
+interface IMockStructNestedInner {
+	/**
+	 * A really important value.
+	 */
+	x: number;
+}`,
+		},
+		{
+			Input: MockStructPointer{},
+			Output: `interface IMockStructPointer {
+	x: number | null;
+}`,
+		},
+		{
+			Input: MockStructNestedCircular{},
+			Output: `interface IMockStructNestedCircular {
+	circular: IMockStructNestedCircular | null | undefined;
 }`,
 		},
 	}
 
 	for _, test := range tests {
 		g := Generator{}
+		builder := strings.Builder{}
 
-		out, err := g.GenerateSingle(test.Input)
+		err := g.GenerateSingle(&builder, test.Input)
 
 		if err != nil {
 			t.Error("failed to generate:", err)
 		}
 
-		if out != test.Output {
-			t.Errorf("Expected %q but got %q", test.Output, out)
+		str := builder.String()
+
+		if str != test.Output {
+			t.Errorf("\n----Expected:\n%s\n----but got:\n%s", test.Output, str)
 		}
 	}
 }
