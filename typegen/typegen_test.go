@@ -117,7 +117,7 @@ interface IMockStructNestedInner {
 	}
 
 	for _, test := range tests {
-		g := Generator{}
+		g := New()
 		builder := strings.Builder{}
 
 		err := g.GenerateSingle(&builder, test.Input)
@@ -140,5 +140,50 @@ interface IMockStructNestedInner {
 		if str != test.Output {
 			t.Errorf("\n----Expected:\n%s\n----but got:\n%s", test.Output, str)
 		}
+	}
+}
+
+func TestGenerateTypesWorks(t *testing.T) {
+	builder := strings.Builder{}
+	g := New()
+
+	err := g.GenerateTypes(
+		&builder,
+		MockStructEmpty{},
+		MockStructEmpty{}, // double up to make sure we don't write the same interface twice
+		MockStructStrings{},
+		MockStructNestedOuter{}, // don't explicitly include the inner
+	)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	str := builder.String()
+
+	expected := `interface IMockStructEmpty {
+}
+
+interface IMockStructStrings {
+	/**
+	 * It's a field of some kind.
+	 */
+	textstuff: string;
+	Another: string;
+}
+
+interface IMockStructNestedOuter {
+	inner: IMockStructNestedInner;
+}
+
+interface IMockStructNestedInner {
+	/**
+	 * A really important value.
+	 */
+	x: number;
+}`
+
+	if str != expected {
+		t.Errorf("\n----Expected:\n%s\n----but got:\n%s", expected, str)
 	}
 }

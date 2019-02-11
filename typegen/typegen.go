@@ -10,6 +10,7 @@ import (
 
 // Generator can inspect a struct type and generate Typescript definitions.
 type Generator struct {
+	typesDefined map[string]bool
 }
 
 // Using custom delimiters here to avoid {} collisions
@@ -34,7 +35,6 @@ type typeTemplateData struct {
 
 var templateInterface *template.Template
 var typeMapping map[string]string
-var typesDefined = make(map[string]bool)
 
 func init() {
 	templateInterface = template.Must(template.New("interface").Delims("<<", ">>").Parse(interfaceTemplate))
@@ -55,21 +55,30 @@ func init() {
 	}
 }
 
+// New creates a new Generator to use
+func New() *Generator {
+	return &Generator{
+		typesDefined: make(map[string]bool),
+	}
+}
+
 // GenerateSingle takes in a single type and returns a full Typescript definition
 // based on that type.
 func (g *Generator) GenerateSingle(out io.Writer, t interface{}) error {
 	r := reflect.TypeOf(t)
 
-	return g.generateSingle(out, r)
+	err := g.generateSingle(out, r)
+
+	return err
 }
 
 func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 	// Already defined earlier, don't redefine
-	if typesDefined[t.Name()] {
+	if g.typesDefined[t.Name()] {
 		return nil
 	}
 
-	typesDefined[t.Name()] = true
+	g.typesDefined[t.Name()] = true
 
 	recursiveDefinitions := make([]reflect.Type, 0)
 
@@ -147,9 +156,11 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 	}
 
 	for _, recursive := range recursiveDefinitions {
-		if !typesDefined[recursive.Name()] {
+		if !g.typesDefined[recursive.Name()] {
 			out.Write([]byte("\n\n"))
-			if err := g.generateSingle(out, recursive); err != nil {
+			err := g.generateSingle(out, recursive)
+
+			if err != nil {
 				return err
 			}
 		}
@@ -160,8 +171,32 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 
 // GenerateTypes writes all typescript interface definitions to the supplied writer
 func (g *Generator) GenerateTypes(out io.Writer, types ...interface{}) error {
+	// Store everything in a string to start, combine later for ease of whitespace
+	definitions := make([]string, 0, len(types))
+
 	for _, t := range types {
-		g.GenerateSingle(out, t)
+		builder := strings.Builder{}
+		err := g.generateSingle(&builder, reflect.TypeOf(t))
+
+		if err != nil {
+			return err
+		}
+
+		str := builder.String()
+
+		if str != "" {
+			definitions = append(definitions, str)
+		}
+	}
+
+	first := true
+
+	for _, d := range definitions {
+		if !first {
+			out.Write([]byte("\n\n"))
+		}
+		out.Write([]byte(d))
+		first = false
 	}
 
 	return nil
