@@ -5,7 +5,22 @@ import "testing"
 type MockStructEmpty struct{}
 
 type MockStructStrings struct {
-	SomeField string `json:"textstuff"`
+	SomeField    string `json:"textstuff"`
+	Another      string
+	DontLookAtMe string `json:"-"`
+}
+
+type MockStructInts struct {
+	A int
+	B int8
+	C int16
+	D int32
+	E int64
+	F uint
+	G uint8
+	H uint16
+	I uint32
+	J uint64
 }
 
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
@@ -15,12 +30,28 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	}{
 		{
 			Input:  MockStructEmpty{},
-			Output: "interface MockStructEmpty {\n}",
+			Output: "interface IMockStructEmpty {\n}",
 		},
 		{
 			Input: MockStructStrings{},
-			Output: `interface MockStructStrings {
+			Output: `interface IMockStructStrings {
 	textstuff: string;
+	Another: string;
+}`,
+		},
+		{
+			Input: MockStructInts{},
+			Output: `interface IMockStructInts {
+	A: number;
+	B: number;
+	C: number;
+	D: number;
+	E: number;
+	F: number;
+	G: number;
+	H: number;
+	I: number;
+	J: number;
 }`,
 		},
 	}

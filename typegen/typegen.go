@@ -10,7 +10,7 @@ import (
 type Generator struct {
 }
 
-const interfaceTemplate = `interface <<.Name>> {<<range .Fields>>
+const interfaceTemplate = `interface I<<.Name>> {<<range .Fields>>
 	<<.Name>>: <<.TypescriptType>>;<<end>>
 }`
 
@@ -33,6 +33,16 @@ func init() {
 	templateInterface = template.Must(template.New("interface").Delims("<<", ">>").Parse(interfaceTemplate))
 	typeMapping = map[string]string{
 		"string": "string",
+		"int":    "number",
+		"int8":   "number",
+		"int16":  "number",
+		"int32":  "number",
+		"int64":  "number",
+		"uint":   "number",
+		"uint8":  "number",
+		"uint16": "number",
+		"uint32": "number",
+		"uint64": "number",
 	}
 }
 
