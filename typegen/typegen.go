@@ -152,7 +152,7 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 		}
 
 		if kind == reflect.Struct {
-			fieldTypescriptType = "I" + fieldType.Name()
+			fieldTypescriptType = "I" + g.interfacePrefix + fieldType.Name()
 
 			// After we're done, make sure to include this type recursively
 			recursiveDefinitions = append(recursiveDefinitions, fieldType)

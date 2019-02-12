@@ -161,6 +161,22 @@ export interface IMockStructNestedInner {
 			Output: `export interface IMessageMockStructEmpty {
 }`,
 		},
+		{
+			Input: MockStructNestedOuter{},
+			Config: Config{
+				Prefix: "Message",
+			},
+			Output: `export interface IMessageMockStructNestedOuter {
+	inner: IMessageMockStructNestedInner;
+}
+
+export interface IMessageMockStructNestedInner {
+	/**
+	 * A really important value.
+	 */
+	x: number;
+}`,
+		},
 	}
 
 	for _, test := range tests {
