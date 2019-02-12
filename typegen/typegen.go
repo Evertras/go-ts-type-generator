@@ -157,6 +157,12 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 			return errors.New("cannot map typescript type from " + fieldType.Kind().String())
 		}
 
+		explicitType := field.Tag.Get("tstype")
+
+		if explicitType != "" {
+			fieldTypescriptType = explicitType
+		}
+
 		if canBeNull {
 			fieldTypescriptType = fieldTypescriptType + " | null"
 		}

@@ -57,6 +57,10 @@ type MockStructAliased struct {
 	X AliasedInt
 }
 
+type MockStructExplicitType struct {
+	X AliasedInt `json:"x" tstype:"ExplicitType"`
+}
+
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	tests := []struct {
 		Input       interface{}
@@ -141,6 +145,12 @@ interface IMockStructNestedInner {
    */
   textstuff: string;
   Another: string;
+}`,
+		},
+		{
+			Input: MockStructExplicitType{},
+			Output: `interface IMockStructExplicitType {
+	x: ExplicitType;
 }`,
 		},
 	}
