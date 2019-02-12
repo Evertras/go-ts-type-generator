@@ -61,6 +61,10 @@ type MockStructExplicitType struct {
 	X AliasedInt `json:"x" tstype:"ExplicitType"`
 }
 
+type MockStructAnyInterface struct {
+	Anything interface{}
+}
+
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	tests := []struct {
 		Input       interface{}
@@ -175,6 +179,12 @@ export interface IMessageMockStructNestedInner {
 	 * A really important value.
 	 */
 	x: number;
+}`,
+		},
+		{
+			Input: MockStructAnyInterface{},
+			Output: `export interface IMockStructAnyInterface {
+	Anything: any;
 }`,
 		},
 	}

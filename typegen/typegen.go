@@ -151,15 +151,22 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 			kind = fieldType.Kind()
 		}
 
-		if kind == reflect.Struct {
+		switch kind {
+		case reflect.Struct:
 			fieldTypescriptType = "I" + g.interfacePrefix + fieldType.Name()
 
 			// After we're done, make sure to include this type recursively
 			recursiveDefinitions = append(recursiveDefinitions, fieldType)
-			defer func() {
-			}()
-		} else if fieldTypescriptType, ok = typeMapping[fieldType.Kind().String()]; !ok {
-			return errors.New("cannot map typescript type from " + fieldType.Kind().String())
+
+		case reflect.Interface:
+			// Interfaces in Go contain methods, not data fields... this should
+			// only really trigger on interface{}, which should be 'any'
+			fieldTypescriptType = "any"
+
+		default:
+			if fieldTypescriptType, ok = typeMapping[fieldType.Kind().String()]; !ok {
+				return errors.New("cannot map typescript type from " + fieldType.Kind().String())
+			}
 		}
 
 		explicitType := field.Tag.Get("tstype")
