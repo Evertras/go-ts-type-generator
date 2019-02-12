@@ -65,6 +65,11 @@ type MockStructAnyInterface struct {
 	Anything interface{}
 }
 
+type MockStructWithUnexportedFields struct {
+	PublicStuff string
+	secret      string
+}
+
 func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	tests := []struct {
 		Input       interface{}
@@ -185,6 +190,12 @@ export interface IMessageMockStructNestedInner {
 			Input: MockStructAnyInterface{},
 			Output: `export interface IMockStructAnyInterface {
 	Anything: any;
+}`,
+		},
+		{
+			Input: MockStructWithUnexportedFields{},
+			Output: `export interface IMockStructWithUnexportedFields {
+	PublicStuff: string;
 }`,
 		},
 	}
