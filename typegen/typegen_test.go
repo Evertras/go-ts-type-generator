@@ -153,6 +153,14 @@ export interface IMockStructNestedInner {
 	x: ExplicitType;
 }`,
 		},
+		{
+			Input: MockStructEmpty{},
+			Config: Config{
+				Prefix: "Message",
+			},
+			Output: `export interface IMessageMockStructEmpty {
+}`,
+		},
 	}
 
 	for _, test := range tests {

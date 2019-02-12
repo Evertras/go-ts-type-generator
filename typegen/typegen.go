@@ -11,16 +11,18 @@ import (
 // Config contains optional settings to dictate behavior/output
 type Config struct {
 	Indentation string
+	Prefix      string
 }
 
 // Generator can inspect a struct type and generate Typescript definitions.
 type Generator struct {
-	typesDefined map[string]bool
-	indentation  string
+	typesDefined    map[string]bool
+	indentation     string
+	interfacePrefix string
 }
 
 // Using custom delimiters here to avoid {} collisions
-const interfaceTemplate = `export interface I<<.Name>> {<<range .Fields>><<if .Desc>>
+const interfaceTemplate = `export interface I<<.Prefix>><<.Name>> {<<range .Fields>><<if .Desc>>
 <<.Indent>>/**
 <<.Indent>> * <<.Desc>>
 <<.Indent>> */<<end>>
@@ -35,7 +37,8 @@ type fieldTemplateData struct {
 }
 
 type typeTemplateData struct {
-	Name string
+	Name   string
+	Prefix string
 
 	Fields []fieldTemplateData
 }
@@ -80,8 +83,9 @@ func NewWithConfig(cfg Config) *Generator {
 	}
 
 	return &Generator{
-		typesDefined: make(map[string]bool),
-		indentation:  cfg.Indentation,
+		typesDefined:    make(map[string]bool),
+		indentation:     cfg.Indentation,
+		interfacePrefix: cfg.Prefix,
 	}
 }
 
@@ -106,7 +110,8 @@ func (g *Generator) generateSingle(out io.Writer, t reflect.Type) error {
 	recursiveDefinitions := make([]reflect.Type, 0)
 
 	data := typeTemplateData{
-		Name: t.Name(),
+		Name:   t.Name(),
+		Prefix: g.interfacePrefix,
 	}
 
 	for i := 0; i < t.NumField(); i++ {
