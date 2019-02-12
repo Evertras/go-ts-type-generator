@@ -70,11 +70,11 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 	}{
 		{
 			Input:  MockStructEmpty{},
-			Output: "interface IMockStructEmpty {\n}",
+			Output: "export interface IMockStructEmpty {\n}",
 		},
 		{
 			Input: MockStructStrings{},
-			Output: `interface IMockStructStrings {
+			Output: `export interface IMockStructStrings {
 	/**
 	 * It's a field of some kind.
 	 */
@@ -84,7 +84,7 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 		},
 		{
 			Input: MockStructInts{},
-			Output: `interface IMockStructInts {
+			Output: `export interface IMockStructInts {
 	A: number;
 	B: number;
 	C: number;
@@ -101,11 +101,11 @@ func TestGeneratesBasicInterfacesCorrectly(t *testing.T) {
 		},
 		{
 			Input: MockStructNestedOuter{},
-			Output: `interface IMockStructNestedOuter {
+			Output: `export interface IMockStructNestedOuter {
 	inner: IMockStructNestedInner;
 }
 
-interface IMockStructNestedInner {
+export interface IMockStructNestedInner {
 	/**
 	 * A really important value.
 	 */
@@ -114,13 +114,13 @@ interface IMockStructNestedInner {
 		},
 		{
 			Input: MockStructPointer{},
-			Output: `interface IMockStructPointer {
+			Output: `export interface IMockStructPointer {
 	x: number | null;
 }`,
 		},
 		{
 			Input: MockStructNestedCircular{},
-			Output: `interface IMockStructNestedCircular {
+			Output: `export interface IMockStructNestedCircular {
 	circular: IMockStructNestedCircular | null | undefined;
 }`,
 		},
@@ -130,7 +130,7 @@ interface IMockStructNestedInner {
 		},
 		{
 			Input: MockStructAliased{},
-			Output: `interface IMockStructAliased {
+			Output: `export interface IMockStructAliased {
 	X: number;
 }`,
 		},
@@ -139,7 +139,7 @@ interface IMockStructNestedInner {
 			Config: Config{
 				Indentation: "  ",
 			},
-			Output: `interface IMockStructStrings {
+			Output: `export interface IMockStructStrings {
   /**
    * It's a field of some kind.
    */
@@ -149,7 +149,7 @@ interface IMockStructNestedInner {
 		},
 		{
 			Input: MockStructExplicitType{},
-			Output: `interface IMockStructExplicitType {
+			Output: `export interface IMockStructExplicitType {
 	x: ExplicitType;
 }`,
 		},
@@ -201,10 +201,10 @@ func TestGenerateTypesWorks(t *testing.T) {
 
 	str := builder.String()
 
-	expected := `interface IMockStructEmpty {
+	expected := `export interface IMockStructEmpty {
 }
 
-interface IMockStructStrings {
+export interface IMockStructStrings {
 	/**
 	 * It's a field of some kind.
 	 */
@@ -212,11 +212,11 @@ interface IMockStructStrings {
 	Another: string;
 }
 
-interface IMockStructNestedOuter {
+export interface IMockStructNestedOuter {
 	inner: IMockStructNestedInner;
 }
 
-interface IMockStructNestedInner {
+export interface IMockStructNestedInner {
 	/**
 	 * A really important value.
 	 */

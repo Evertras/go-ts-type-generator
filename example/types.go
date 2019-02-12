@@ -7,6 +7,7 @@ type SomeData struct {
 	X int `json:"x"`
 	Y uint64
 	Z string
+	W string `tstype:"ExplicitEnum" tsdesc:"An explicitly typed enum we define somewhere else"`
 }
 
 // Outer holds Inner

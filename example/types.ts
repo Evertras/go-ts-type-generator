@@ -1,16 +1,25 @@
 /* THIS FILE IS GENERATED, DO NOT EDIT */
 
-interface ISomeData {
+export enum ExplicitEnum {
+	SomeEnumValA = "a",
+	SomeEnumValB = "b",
+}
+
+export interface ISomeData {
 	x: number;
 	Y: number;
 	Z: string;
+	/**
+	 * An explicitly typed enum we define somewhere else
+	 */
+	W: ExplicitEnum;
 }
 
-interface IOuter {
+export interface IOuter {
 	inner: IInner;
 }
 
-interface IInner {
+export interface IInner {
 	x: number | null | undefined;
 	y: number | null;
 }

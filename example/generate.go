@@ -24,6 +24,14 @@ func main() {
 	// Write a helpful header at the top of our file
 	outfile.WriteString("/* THIS FILE IS GENERATED, DO NOT EDIT */\n\n")
 
+	// Manually write an enum that one of the types will use
+	outfile.WriteString(`export enum ExplicitEnum {
+	SomeEnumValA = "a",
+	SomeEnumValB = "b",
+}
+
+`)
+
 	generator := typegen.New()
 
 	// Write all our types to our file

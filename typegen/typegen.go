@@ -20,7 +20,7 @@ type Generator struct {
 }
 
 // Using custom delimiters here to avoid {} collisions
-const interfaceTemplate = `interface I<<.Name>> {<<range .Fields>><<if .Desc>>
+const interfaceTemplate = `export interface I<<.Name>> {<<range .Fields>><<if .Desc>>
 <<.Indent>>/**
 <<.Indent>> * <<.Desc>>
 <<.Indent>> */<<end>>
